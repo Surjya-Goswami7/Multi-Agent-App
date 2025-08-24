@@ -8,8 +8,8 @@ export async function POST(req: NextRequest) {
     // 🔥 Get user info from middleware
     const userId = req.headers.get("x-user-id");
     const email = req.headers.get("x-user-email");
-    
-    console.log('userId', userId, ' =============email', email);
+
+    console.log("userId", userId, " =============email", email);
     if (!userId || !email) {
       return NextResponse.json(
         { status: 401, message: "Unauthorized - No user found" },

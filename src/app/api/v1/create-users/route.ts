@@ -3,12 +3,13 @@ import pool from "../../../utils/db";
 import bcrypt from "bcryptjs";
 import { RowDataPacket, ResultSetHeader } from "mysql2";
 
-type user = RowDataPacket & {
-  id: Number;
-  full_name: String;
-  email: String;
-  user_password: String;
-  user_session: Number;
+type User = RowDataPacket & {
+  id: number;
+  full_name: string;
+  email: string;
+  user_password: string;
+  total_credits: number | null;
+  outstanding_credits: number | null;
 };
 
 export async function POST(req: NextRequest) {
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const [existingUser] = await connection.execute<user[]>(
+    const [existingUser] = await connection.execute<User[]>(
       "SELECT * FROM users WHERE email = ?",
       [email]
     );

@@ -7,7 +7,7 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import * as XLSX from "xlsx";
-import { useCredits } from "app/context/authContext";
+// import { useCredits } from "app/context/authContext";
 import Cookies from "js-cookie";
 
 export default function AgentDetails() {
@@ -18,46 +18,45 @@ export default function AgentDetails() {
   const [location, setLocation] = useState("");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any[]>([]);
-  const { credits, setCredits } = useCredits();
+  // const { credits, setCredits } = useCredits();
 
   if (!agent)
     return <p className="text-center mt-10 text-red-500">Agent not found</p>;
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  setLoading(true);
+    setLoading(true);
 
-  try {
-    const creditRes = await fetch("/api/v1/deduct-users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lookingFor, location }),
-      credentials: "include", // ✅ ensures cookie (token) is sent
-    });
+    try {
+      const creditRes = await fetch("/api/v1/deduct-users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lookingFor, location }),
+        credentials: "include", // ✅ ensures cookie (token) is sent
+      });
 
-    if (!creditRes.ok) {
-      toast.error("Session expired or request failed. Please log in again.");
+      if (!creditRes.ok) {
+        toast.error("Session expired or request failed. Please log in again.");
+        setLoading(false);
+        return;
+      }
+
+      const creditData = await creditRes.json();
+
+      if (creditData?.success) {
+        toast.success("Credits deducted successfully!");
+        // 🚀 Do your follow-up actions here (redirect, state updates, etc.)
+      } else {
+        toast.error(creditData?.message || "Failed to deduct credits.");
+      }
+    } catch (error) {
+      console.error("Error in handleSubmit:", error);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const creditData = await creditRes.json();
-
-    if (creditData?.success) {
-      toast.success("Credits deducted successfully!");
-      // 🚀 Do your follow-up actions here (redirect, state updates, etc.)
-    } else {
-      toast.error(creditData?.message || "Failed to deduct credits.");
-    }
-  } catch (error) {
-    console.error("Error in handleSubmit:", error);
-    toast.error("Something went wrong. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(results);
@@ -129,7 +128,7 @@ export default function AgentDetails() {
           />
           <button
             type="submit"
-            disabled={loading || (credits !== null && credits < 2)}
+            // disabled={loading || (credits !== null && credits < 2)}
             className="w-full px-8 py-3 bg-black text-white rounded-lg 
              hover:bg-gray-800 transition-all duration-300 
              disabled:bg-gray-400"

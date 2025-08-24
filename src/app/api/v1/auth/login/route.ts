@@ -26,12 +26,20 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    // use join query with user-credits
+    // join query with user-credits
     const [rows] = await connection.execute<User[]>(
-      "SELECT * FROM users WHERE email = ?",
+      `SELECT 
+      u.id, 
+      u.full_name, 
+      u.email, 
+      u.user_password, 
+      c.total_credits, 
+      c.outstanding_credits
+   FROM users u
+   LEFT JOIN user_credits c ON u.id = c.user_id
+   WHERE u.email = ?`,
       [email]
     );
-
     if (rows.length === 0) {
       return NextResponse.json(
         { status: 404, message: "User not found" },
@@ -41,7 +49,6 @@ export async function POST(req: NextRequest) {
 
     const user = rows[0];
 
-
     const passwordMatch = await bcrypt.compare(password, user.user_password);
 
     if (!passwordMatch) {
@@ -50,18 +57,18 @@ export async function POST(req: NextRequest) {
         { status: 401 }
       );
     }
-    //add user credit here
+    // add user credit here
     const token = jwt.sign(
       {
         userId: user.id,
         email: user.email,
         role: "user",
         name: user.full_name,
+        totalCredits: user.total_credits ?? 0,
+        outstandingCredits: user.outstanding_credits ?? 0,
       },
       SECRET_KEY,
-      {
-        expiresIn: "24h",
-      }
+      { expiresIn: "24h" }
     );
 
     const response = NextResponse.json({
@@ -69,6 +76,9 @@ export async function POST(req: NextRequest) {
       message: "Login successful",
       user: {
         email: user.email,
+        name: user.full_name,
+        totalCredits: user.total_credits ?? 0,
+        outstandingCredits: user.outstanding_credits ?? 0,
       },
     });
 
