@@ -7,8 +7,8 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import * as XLSX from "xlsx";
-// import { useCredits } from "app/context/authContext";
 import Cookies from "js-cookie";
+import { motion } from "framer-motion";
 
 export default function AgentDetails() {
   const { id } = useParams();
@@ -18,14 +18,12 @@ export default function AgentDetails() {
   const [location, setLocation] = useState("");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any[]>([]);
-  // const { credits, setCredits } = useCredits();
 
   if (!agent)
     return <p className="text-center mt-10 text-red-500">Agent not found</p>;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     setLoading(true);
 
     try {
@@ -33,7 +31,7 @@ export default function AgentDetails() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lookingFor, location }),
-        credentials: "include", // ✅ ensures cookie (token) is sent
+        credentials: "include",
       });
 
       if (!creditRes.ok) {
@@ -46,7 +44,6 @@ export default function AgentDetails() {
 
       if (creditData?.success) {
         toast.success("Credits deducted successfully!");
-        // 🚀 Do your follow-up actions here (redirect, state updates, etc.)
       } else {
         toast.error(creditData?.message || "Failed to deduct credits.");
       }
@@ -66,56 +63,66 @@ export default function AgentDetails() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center p-8 bg-gradient-to-b from-[#fdf6e3] to-[#fffaf0]">
+    <div className="min-h-screen flex flex-col items-center p-8 bg-gradient-to-b from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white">
       {/* Agent Icon */}
-      <div className="bg-white p-6 rounded-full shadow-md mb-6">
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="bg-gradient-to-r from-purple-600 to-pink-500 p-6 rounded-full shadow-lg mb-6"
+      >
         <Image
           src={agent.icon}
           alt={`${agent.name} icon`}
-          width={80}
-          height={80}
+          width={90}
+          height={90}
           className="rounded-full"
         />
-      </div>
+      </motion.div>
+
       {/* Title */}
-      <h1 className="text-4xl font-extrabold mb-3 text-gray-800">
+      <h1 className="text-4xl font-extrabold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600">
         {agent.name}
       </h1>
+
       {/* Description */}
-      <p className="mb-8 max-w-2xl text-center text-gray-600">
+      <p className="mb-8 max-w-2xl text-center text-gray-300">
         {agent.description}
       </p>
-      {/* Scraping Info Section */}{" "}
-      <div className="bg-yellow-50 p-4 rounded-lg mb-8 max-w-2xl text-left">
-        {" "}
-        <h3 className="text-xl text-gray-800 font-semibold mb-2">
+
+      {/* Scraping Info */}
+      <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/20 p-6 rounded-2xl mb-10 max-w-2xl text-left shadow-lg border border-purple-700/30">
+        <h3 className="text-xl font-semibold mb-3 text-cyan-300">
           How this Agent Works
-        </h3>{" "}
-        <p className="text-gray-700 mb-2">
-          {" "}
-          This agent uses <span className="font-bold">web scraping</span> to
-          automatically gather relevant information from multiple sources.{" "}
-        </p>{" "}
-        <p className="text-gray-700">
-          {" "}
+        </h3>
+        <p className="text-gray-300 mb-2">
+          This agent uses <span className="font-bold text-purple-300">web scraping</span> to
+          automatically gather relevant information from multiple sources.
+        </p>
+        <p className="text-gray-300">
           Simply enter what you are looking for and the location, and the agent
-          fetches results instantly.{" "}
-        </p>{" "}
-        <p className="text-gray-600 mt-2 italic text-sm">
-          {" "}
+          fetches results instantly.
+        </p>
+        <p className="text-sm italic mt-3 text-gray-400">
           Scraping saves you time and ensures you always get accurate,
-          up-to-date information.{" "}
-        </p>{" "}
+          up-to-date information.
+        </p>
       </div>
+
       {/* Form */}
-      <div className="border rounded-2xl p-6 max-w-lg w-full shadow-lg bg-white">
-        <form onSubmit={handleSubmit} className="space-y-4">
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6 }}
+        className="border border-gray-700 bg-white/10 backdrop-blur-xl rounded-2xl p-8 max-w-lg w-full shadow-2xl"
+      >
+        <form onSubmit={handleSubmit} className="space-y-5">
           <input
             type="text"
             placeholder="What are you looking for?"
             value={lookingFor}
             onChange={(e) => setLookingFor(e.target.value)}
-            className="w-full text-gray-600 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+            className="w-full px-4 py-3 rounded-lg bg-black/40 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500"
             required
           />
           <input
@@ -123,59 +130,60 @@ export default function AgentDetails() {
             placeholder="Location"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            className="w-full px-4 text-gray-600 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+            className="w-full px-4 py-3 rounded-lg bg-black/40 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500"
             required
           />
           <button
             type="submit"
-            // disabled={loading || (credits !== null && credits < 2)}
-            className="w-full px-8 py-3 bg-black text-white rounded-lg 
-             hover:bg-gray-800 transition-all duration-300 
-             disabled:bg-gray-400"
+            className="w-full py-3 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 text-white font-bold rounded-lg shadow-lg hover:opacity-90 transition duration-300"
           >
             {loading ? "Fetching..." : "Submit"}
           </button>
         </form>
-      </div>
-      {/* Table */}
+      </motion.div>
+
+      {/* Results Table */}
       {results.length > 0 && (
-        <div className="mt-10 w-full max-w-6xl">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="mt-12 w-full max-w-6xl"
+        >
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-3xl font-extrabold text-gray-800 tracking-wide">
-              Results
-            </h2>
+            <h2 className="text-3xl font-bold text-cyan-400">Results</h2>
             <button
               onClick={exportToExcel}
-              className="px-5 py-2 bg-gradient-to-r from-green-600 to-green-500 text-white font-semibold rounded-xl shadow-md hover:from-green-500 hover:to-green-400 transition-all duration-300"
+              className="px-5 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-xl shadow-md hover:scale-105 transition"
             >
               Export to Excel
             </button>
           </div>
 
-          <div className="overflow-x-auto rounded-xl shadow-lg border border-gray-200 bg-white">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
+          <div className="overflow-x-auto rounded-xl shadow-lg border border-gray-700 bg-white/10 backdrop-blur-lg">
+            <table className="min-w-full divide-y divide-gray-700 text-white">
+              <thead className="bg-gradient-to-r from-gray-800 to-gray-700">
                 <tr>
                   {Object.keys(results[0]).map((key) => (
                     <th
                       key={key}
-                      className="px-6 py-3 text-left text-sm font-bold text-gray-700 uppercase tracking-wider"
+                      className="px-6 py-3 text-left text-sm font-bold uppercase tracking-wider text-cyan-400"
                     >
                       {key}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-gray-700">
                 {results.map((row, idx) => (
                   <tr
                     key={idx}
-                    className="hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 transition-colors"
+                    className="hover:bg-gradient-to-r hover:from-purple-900/30 hover:to-pink-900/20 transition"
                   >
                     {Object.values(row).map((val, i) => (
                       <td
                         key={i}
-                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
+                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-200"
                       >
                         {String(val)}
                       </td>
@@ -185,7 +193,7 @@ export default function AgentDetails() {
               </tbody>
             </table>
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
   );

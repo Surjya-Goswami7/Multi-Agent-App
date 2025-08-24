@@ -8,11 +8,13 @@ import {
   ReactNode,
 } from "react";
 
+import { useRouter } from "next/navigation";
 type User = {
-  id: string;
+  userId: string;
   name: string;
   email: string;
-  credits: number;
+  outstandingCredits: number;
+  totalCredits: number;
 } | null;// since /api/check does not return user info, only loggedIn boolean
 
 type AuthContextType = {
@@ -29,6 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loggedIn, setLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User>(null);
+  let router = useRouter();
   const checkAuth = async () => {
     try {
       setLoading(true);
@@ -61,6 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         credentials: "include",
       });
       setLoggedIn(false);
+      router.push('/')
     } catch (err) {
       console.error("Logout failed:", err);
     }

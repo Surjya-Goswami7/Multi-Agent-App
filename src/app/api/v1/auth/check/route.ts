@@ -5,15 +5,15 @@ export async function GET(req: NextRequest) {
   const token = req.cookies.get("token")?.value;
 
   if (!token) {
-    return NextResponse.json({ loggedIn: false }, { status: 401 });
+    return NextResponse.json({ loggedIn: false, user: null }, { status: 401 });
   }
 
-  const { valid } = await verifyToken(token);
+  const { valid, user } = await verifyToken(token);
   //get the user from verify token and sent the response with user
 
   if (!valid) {
-    return NextResponse.json({ loggedIn: false }, { status: 401 });
+    return NextResponse.json({ loggedIn: false, user: null }, { status: 401 });
   }
 
-  return NextResponse.json({ loggedIn: true }, { status: 200 });
+  return NextResponse.json({ loggedIn: true, user: user }, { status: 200 });
 }

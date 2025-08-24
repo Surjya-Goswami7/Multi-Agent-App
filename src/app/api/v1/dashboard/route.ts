@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   }
 
   const { valid, user } = await verifyToken(token);
-  console.log("User object:", user);
+
   if (!valid || !user) {
     return NextResponse.json(
       { error: "Unauthorized: Invalid token" },

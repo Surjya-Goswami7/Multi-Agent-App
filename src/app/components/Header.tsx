@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../context/authContext";
+import Loading from "./Loading";
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -20,7 +21,7 @@ export default function Header() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-  console.log('user', user)
+  console.log("user", user);
   return (
     <header className="flex justify-between items-center p-4 bg-gradient-to-r from-black via-gray-900 to-black shadow-lg">
       {/* Logo */}
@@ -39,7 +40,7 @@ export default function Header() {
       <div ref={menuRef} className="relative">
         {loading ? (
           // Show loading state while /api/check is validating
-          <span className="text-gray-300 text-sm">Checking session...</span>
+          <Loading size="sm"/>
         ) : user ? (
           <>
             {/* Profile Button */}
@@ -50,12 +51,14 @@ export default function Header() {
               <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center font-bold text-lg">
                 {user.name?.charAt(0).toUpperCase()}
               </div>
-              <span className="hidden sm:inline font-semibold">{user.name}</span>
+              <span className="hidden sm:inline font-semibold">
+                {user.name}
+              </span>
             </button>
 
             {/* Dropdown */}
             {menuOpen && (
-              <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden animate-fade-in">
+              <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden animate-fade-in z-50">
                 <div className="p-4 flex flex-col items-center bg-gradient-to-br from-purple-50 to-pink-50">
                   <div className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white text-2xl font-bold mb-2 shadow">
                     {user.name?.charAt(0).toUpperCase()}
@@ -64,14 +67,14 @@ export default function Header() {
                     {user.name}
                   </p>
                   <p className="text-sm text-gray-500">
-                    {user.credits} credits left
+                    {user.outstandingCredits} credits left
                   </p>
                 </div>
 
                 <div className="border-t border-gray-200">
                   <button
                     onClick={logout}
-                    className="w-full px-4 py-3 text-left text-red-600 font-medium hover:bg-red-50 transition"
+                    className="w-full px-4 py-3 text-center text-red-600 font-medium hover:bg-red-50 transition"
                   >
                     Logout
                   </button>

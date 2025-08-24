@@ -2,21 +2,39 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+
 export default function LandingPage() {
-    const router = useRouter();
-    const handleExploreClick = async () => {
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  //Check authentication on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch("/api/v1/auth/check", {
+          method: "GET",
+          credentials: "include",
+        });
+        setIsAuthenticated(res.ok); // true if logged in
+      } catch (err) {
+        console.error("Auth check error:", err);
+        setIsAuthenticated(false);
+      }
+    };
+    checkAuth();
+  }, []);
+
+  const handleExploreClick = async () => {
     try {
-      // Hit a small API endpoint that just verifies the token from cookies
       const res = await fetch("/api/v1/auth/check", {
         method: "GET",
-        credentials: "include", // ensures cookies are sent
+        credentials: "include",
       });
 
       if (res.ok) {
-        // ✅ User is logged in → go to dashboard
         router.push("/dashboard");
       } else {
-        //Not logged in → go to login
         router.push("/login");
       }
     } catch (err) {
@@ -24,6 +42,7 @@ export default function LandingPage() {
       router.push("/login");
     }
   };
+
   return (
     <div className="flex flex-col min-h-screen bg-[#fff7eb]">
       {/* Hero Section */}
@@ -97,17 +116,19 @@ export default function LandingPage() {
       </section>
 
       {/* Call to Action */}
-      <section className="bg-gradient-to-r from-[#0f0c29] via-[#302b63] to-[#24243e] py-16 text-center text-white">
-        <h2 className="text-3xl md:text-4xl font-bold mb-6">
-          Ready to Supercharge Your Workflow?
-        </h2>
-        <Link
-          href="/signup"
-          className="bg-orange-500 hover:bg-orange-600 px-8 py-4 rounded-full text-lg font-semibold shadow-lg transition"
-        >
-          Join Now
-        </Link>
-      </section>
+      {isAuthenticated === false && (
+        <section className="bg-gradient-to-r from-[#0f0c29] via-[#302b63] to-[#24243e] py-16 text-center text-white">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">
+            Ready to Supercharge Your Workflow?
+          </h2>
+          <Link
+            href="/signup"
+            className="bg-orange-500 hover:bg-orange-600 px-8 py-4 rounded-full text-lg font-semibold shadow-lg transition"
+          >
+            Join Now
+          </Link>
+        </section>
+      )}
     </div>
   );
 }

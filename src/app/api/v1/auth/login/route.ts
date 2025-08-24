@@ -35,9 +35,9 @@ export async function POST(req: NextRequest) {
       u.user_password, 
       c.total_credits, 
       c.outstanding_credits
-   FROM users u
-   LEFT JOIN user_credits c ON u.id = c.user_id
-   WHERE u.email = ?`,
+      FROM users u
+      LEFT JOIN user_credits c ON u.id = c.user_id
+      WHERE u.email = ?`,
       [email]
     );
     if (rows.length === 0) {
