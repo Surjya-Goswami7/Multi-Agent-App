@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { valid, user } = await verifyToken(token);
-    
+
     if (!valid || !user) {
         return NextResponse.json(
           { error: "Unauthorized: Invalid token" },
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         status: 200,
-        message: "2 credits deducted successfully",
+        message: "2 Credits Are Used",
         remainingCredits: updatedTotal,
       },
       { status: 200 }

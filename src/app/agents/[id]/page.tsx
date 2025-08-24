@@ -7,10 +7,10 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import * as XLSX from "xlsx";
-import Cookies from "js-cookie";
 import { motion } from "framer-motion";
-
+import { useAuth } from "app/context/authContext";
 export default function AgentDetails() {
+  const { updateCredits, user } = useAuth();
   const { id } = useParams();
   const agent = agents.find((a) => a.id === id);
 
@@ -19,8 +19,9 @@ export default function AgentDetails() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any[]>([]);
 
-  if (!agent)
+  if (!agent){
     return <p className="text-center mt-10 text-red-500">Agent not found</p>;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,11 +42,34 @@ export default function AgentDetails() {
       }
 
       const creditData = await creditRes.json();
+      console.log('creditData', creditData)
+      if (creditData.status === 200) {
+        toast.success(creditData.message);
+         if (user) {
+          updateCredits(user.outstandingCredits - 2); 
+        }
+        //calling the webhook here
+        if (agent?.webhookUrl) {
+          try {
+            const webhookRes = await fetch(agent.webhookUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ lookingFor, location }), // send input data
+            });
 
-      if (creditData?.success) {
-        toast.success("Credits deducted successfully!");
+            if (!webhookRes.ok) {
+              throw new Error("Webhook request failed");
+            }
+
+            const webhookData = await webhookRes.json();
+            setResults(webhookData);
+          } catch (err) {
+            console.error("Webhook error:", err);
+            toast.error("Failed to fetch data from agent webhook.");
+          }
+        }
       } else {
-        toast.error(creditData?.message || "Failed to deduct credits.");
+        toast.error(creditData.message || "Failed to deduct credits.");
       }
     } catch (error) {
       console.error("Error in handleSubmit:", error);

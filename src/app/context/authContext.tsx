@@ -23,6 +23,7 @@ type AuthContextType = {
   loading: boolean;
   checkAuth: () => Promise<void>;
   logout: () => Promise<void>;
+  updateCredits: (newCredits: number) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -73,10 +74,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     checkAuth();
   }, []);
-
+  
+  const updateCredits = (newCredits: number) => {
+    setUser((prevUser) =>
+      prevUser ? { ...prevUser, outstandingCredits: newCredits } : prevUser
+    );
+  };
   return (
     <AuthContext.Provider
-      value={{ user, loggedIn, loading, checkAuth, logout }}
+      value={{ user, loggedIn, loading, checkAuth, logout, updateCredits  }}
     >
       {children}
     </AuthContext.Provider>
