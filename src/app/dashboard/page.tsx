@@ -82,7 +82,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen flex flex-col bg-[#fdf6e3] text-black">
       {/* Top Bar */}
-      <div className="flex justify-between items-center p-4 bg-gradient-to-r from-black via-gray-900 to-black shadow-lg">
+      {/* <div className="flex justify-between items-center p-4 bg-gradient-to-r from-black via-gray-900 to-black shadow-lg">
         <div ref={menuRef} className="relative">
           <button
             onClick={() => setMenuOpen(!menuOpen)}
@@ -95,8 +95,6 @@ export default function Dashboard() {
               {userName || "Profile"}
             </span>
           </button>
-
-          {/* Dropdown Menu */}
           {menuOpen && (
             <div className="absolute left-0 mt-3 w-64 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden animate-fade-in">
               <div className="p-4 flex flex-col items-center bg-gradient-to-br from-purple-50 to-pink-50">
@@ -120,7 +118,7 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-      </div>
+      </div> */}
 
       {/* Main Content */}
       <div className="flex-grow flex flex-col items-center justify-start pt-8 px-4 sm:px-6 lg:px-12">

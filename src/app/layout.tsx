@@ -1,6 +1,9 @@
 import { ReactNode } from "react";
 import "./globals.css";
-import { CreditsProvider } from "./context/creditcontext";
+import { AuthProvider } from "./context/authContext";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+
 export const metadata = {
   title: "Multi Agent App",
 };
@@ -9,7 +12,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <CreditsProvider>{children}</CreditsProvider>
+        <AuthProvider>
+          <Header />
+          <main>{children}</main>
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );

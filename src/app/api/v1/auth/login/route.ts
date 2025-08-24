@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-
+    // use join query with user-credits
     const [rows] = await connection.execute<User[]>(
       "SELECT * FROM users WHERE email = ?",
       [email]
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     }
 
     const user = rows[0];
-    console.log("users", user);
+
 
     const passwordMatch = await bcrypt.compare(password, user.user_password);
 
@@ -50,6 +50,7 @@ export async function POST(req: NextRequest) {
         { status: 401 }
       );
     }
+    //add user credit here
     const token = jwt.sign(
       {
         userId: user.id,

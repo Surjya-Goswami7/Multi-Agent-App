@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken } from "auth"; // Adjust if needed
-import type { UserInfo } from "app/utils/common/type"; //
+import { verifyToken } from "auth"; // your JWT verify helper
+import type { UserInfo } from "app/utils/common/type"; // adjust path
 
+// ✅ Allowed origins for CORS
 const allowedOrigins: string[] = ["http://localhost:3000"];
 
-const setCORSHeaders = (res: NextResponse, origin: string | null): void => {
+function setCORSHeaders(res: NextResponse, origin: string | null): void {
   if (origin && allowedOrigins.includes(origin)) {
     res.headers.set("Access-Control-Allow-Origin", origin);
   } else {
@@ -17,61 +18,70 @@ const setCORSHeaders = (res: NextResponse, origin: string | null): void => {
     "Access-Control-Allow-Headers",
     "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Data, X-Api-Version, Authorization, auth, source"
   );
-};
+}
 
-// List of public paths
-const publicPaths = ["/login", "/api/public"];
+// ✅ Public routes (skip auth check)
+const publicPaths = ["/", "/login", "/api/v1"];
 
 export default async function middleware(req: NextRequest) {
-  console.log(" Middleware triggered for:", req.nextUrl.pathname);
+  const { pathname } = req.nextUrl;
+  const origin =
+    req.headers.get("origin") || req.headers.get("referer") || null;
+  const token = req.cookies.get("token")?.value ?? null;
 
-  const pathname = req.nextUrl.pathname;
-  const origin = req.headers.get("origin") || req.headers.get("referer") || "";
-  const token = req.cookies.get("token")?.value || null;
-
-  // Allow OPTIONS preflight
+  // ✅ Handle CORS preflight
   if (req.method === "OPTIONS") {
     const res = NextResponse.json({}, { status: 204 });
     setCORSHeaders(res, origin);
     return res;
   }
 
-  // Allow public paths without auth
+  // ✅ Allow public routes without auth
   if (publicPaths.some((path) => pathname.startsWith(path))) {
     const res = NextResponse.next();
     setCORSHeaders(res, origin);
     return res;
   }
-  console.log("token", token);
+
+  // ✅ No token → redirect to /login
   if (!token) {
-    console.warn(" No token found. Redirecting to login.");
     const res = NextResponse.redirect(new URL("/login", req.url));
     setCORSHeaders(res, origin);
     return res;
   }
 
-  // Verify token
-  const { valid } = await verifyToken(token);
-  console.log("valid  user", valid);
-  if (!valid) {
-    console.warn(" Invalid token. Redirecting to login.");
+  // ✅ Verify JWT token
+  try {
+    const { valid, user } = await verifyToken(token);
+
+    if (!valid) {
+      console.warn("[MIDDLEWARE] Invalid/expired token → redirect to /login");
+      const res = NextResponse.redirect(new URL("/login", req.url));
+      setCORSHeaders(res, origin);
+      return res;
+    }
+
+    // ✅ Valid token → allow access
+    const res = NextResponse.next();
+    setCORSHeaders(res, origin);
+
+    // Optional: Pass user info to downstream APIs
+    if (user) {
+      res.headers.set("x-user-info", JSON.stringify(user as UserInfo));
+    }
+
+    return res;
+  } catch (err) {
+    console.error("[MIDDLEWARE] Error verifying token:", err);
     const res = NextResponse.redirect(new URL("/login", req.url));
     setCORSHeaders(res, origin);
     return res;
-  } else {
-    console.log("verified");
   }
-
-  // Optional: add user to request headers (for internal APIs)
-  const res = NextResponse.next();
-  setCORSHeaders(res, origin);
-  //res.headers.set("x-user-info", JSON.stringify(user as UserInfo));
-  return res;
 }
 
+// ✅ Apply middleware only on protected routes
 export const config = {
   matcher: [
-    "/",
     "/dashboard/:path*",
     "/profile/:path*",
     "/settings/:path*",

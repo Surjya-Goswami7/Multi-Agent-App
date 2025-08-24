@@ -75,7 +75,7 @@ export default function Login() {
 
         <div className="relative z-10">
           <h2 className="text-3xl font-extrabold text-center text-white drop-shadow-lg">
-            Welcome Back 👋
+            Multi-Agent App
           </h2>
           <p className="text-center text-sm text-gray-200 mt-2 mb-6">
             Please login to continue

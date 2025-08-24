@@ -7,7 +7,8 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import * as XLSX from "xlsx";
-import { useCredits } from "app/context/creditcontext";
+import { useCredits } from "app/context/authContext";
+import Cookies from "js-cookie";
 
 export default function AgentDetails() {
   const { id } = useParams();
@@ -23,76 +24,40 @@ export default function AgentDetails() {
     return <p className="text-center mt-10 text-red-500">Agent not found</p>;
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (credits !== null && credits < 2) {
-      toast.error("Not enough credits → Buy more");
+  setLoading(true);
+
+  try {
+    const creditRes = await fetch("/api/v1/deduct-users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lookingFor, location }),
+      credentials: "include", // ✅ ensures cookie (token) is sent
+    });
+
+    if (!creditRes.ok) {
+      toast.error("Session expired or request failed. Please log in again.");
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
-    setResults([]);
+    const creditData = await creditRes.json();
 
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        toast.error("You must be logged in.");
-        setLoading(false);
-        return;
-      }
-
-      const userData = JSON.parse(atob(token.split(".")[1]));
-      const email = userData?.email;
-      console.log("Calling deduct-users API with email:", email);
-      // Deduct 2 credits via API
-      const creditRes = await fetch(
-        "http://localhost:3000/api/v1/deduct-users",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }), // sending email instead of userId
-        }
-      );
-
-      const creditData = await creditRes.json();
-
-      if (creditRes.status !== 200) {
-        toast.error(creditData.message || "Not enough credits.");
-        setLoading(false);
-        return;
-      }
-
-      // Update global credits
-      setCredits(creditData.remainingCredits);
-      toast.info(`Credits left: ${creditData.remainingCredits}`);
-
-      // Call agent webhook
-      if (!agent.webhookUrl) {
-        toast.error("No webhook URL found for this agent.");
-        setLoading(false);
-        return;
-      }
-
-      const res = await fetch(agent.webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lookingFor, location }),
-      });
-
-      if (!res.ok) throw new Error("Webhook call failed");
-
-      const data = await res.json();
-      setResults(data);
-      toast.success("Data fetched successfully!");
-    } catch (err) {
-      console.error(err);
-      toast.error("Something went wrong.");
-    } finally {
-      setLoading(false);
-      setLookingFor("");
-      setLocation("");
+    if (creditData?.success) {
+      toast.success("Credits deducted successfully!");
+      // 🚀 Do your follow-up actions here (redirect, state updates, etc.)
+    } else {
+      toast.error(creditData?.message || "Failed to deduct credits.");
     }
-  };
+  } catch (error) {
+    console.error("Error in handleSubmit:", error);
+    toast.error("Something went wrong. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(results);
@@ -124,7 +89,7 @@ export default function AgentDetails() {
       {/* Scraping Info Section */}{" "}
       <div className="bg-yellow-50 p-4 rounded-lg mb-8 max-w-2xl text-left">
         {" "}
-        <h3 className="text-xl font-semibold mb-2">
+        <h3 className="text-xl text-gray-800 font-semibold mb-2">
           How this Agent Works
         </h3>{" "}
         <p className="text-gray-700 mb-2">
@@ -151,7 +116,7 @@ export default function AgentDetails() {
             placeholder="What are you looking for?"
             value={lookingFor}
             onChange={(e) => setLookingFor(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+            className="w-full text-gray-600 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
             required
           />
           <input
@@ -159,7 +124,7 @@ export default function AgentDetails() {
             placeholder="Location"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+            className="w-full px-4 text-gray-600 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
             required
           />
           <button

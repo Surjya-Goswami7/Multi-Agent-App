@@ -5,13 +5,15 @@ import { RowDataPacket } from "mysql2";
 export async function POST(req: NextRequest) {
   const connection = await pool.getConnection();
   try {
-    const body = await req.json();
-    const { email } = body;
-
-    if (!email) {
+    // 🔥 Get user info from middleware
+    const userId = req.headers.get("x-user-id");
+    const email = req.headers.get("x-user-email");
+    
+    console.log('userId', userId, ' =============email', email);
+    if (!userId || !email) {
       return NextResponse.json(
-        { status: 400, message: "User email is required" },
-        { status: 400 }
+        { status: 401, message: "Unauthorized - No user found" },
+        { status: 401 }
       );
     }
 
@@ -19,14 +21,13 @@ export async function POST(req: NextRequest) {
     const [rows] = await connection.execute<RowDataPacket[]>(
       `SELECT uc.user_id, uc.total_credits, uc.outstanding_credits
        FROM user_credits uc
-       JOIN users u ON uc.user_id = u.id
-       WHERE u.email = ?`,
-      [email]
+       WHERE uc.user_id = ?`,
+      [userId]
     );
 
     if (rows.length === 0) {
       return NextResponse.json(
-        { status: 404, message: "User not found or credits not assigned" },
+        { status: 404, message: "Credits not found" },
         { status: 404 }
       );
     }
@@ -72,28 +73,28 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const connection = await pool.getConnection();
   try {
-    const { searchParams } = new URL(req.url);
-    const email = searchParams.get("email");
+    // 🔥 Get user info from middleware
+    const userId = req.headers.get("x-user-id");
+    const email = req.headers.get("x-user-email");
 
-    if (!email) {
+    if (!userId || !email) {
       return NextResponse.json(
-        { status: 400, message: "User email is required" },
-        { status: 400 }
+        { status: 401, message: "Unauthorized - No user found" },
+        { status: 401 }
       );
     }
 
     // Fetch credits for dashboard
     const [rows] = await connection.execute<RowDataPacket[]>(
       `SELECT uc.total_credits, uc.outstanding_credits
-       FROM users u
-       LEFT JOIN user_credits uc ON u.id = uc.user_id
-       WHERE u.email = ?`,
-      [email]
+       FROM user_credits uc
+       WHERE uc.user_id = ?`,
+      [userId]
     );
 
     if (rows.length === 0) {
       return NextResponse.json(
-        { status: 404, message: "User not found or credits not assigned" },
+        { status: 404, message: "Credits not found" },
         { status: 404 }
       );
     }

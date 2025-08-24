@@ -21,12 +21,8 @@ export async function verifyToken(token: string): Promise<{
       return { valid: false };
     }
 
-    console.log("verifyToken => received token:", token);
-
     const secret = new TextEncoder().encode(SECRET_KEY);
     const { payload } = await jwtVerify(token, secret);
-
-    console.log("Decoded JWT payload:", payload);
 
     return {
       valid: true,
